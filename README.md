@@ -12,4 +12,4 @@ See the manifest.webapp and js/main.js for how the API is used.
 
 ## Issues
 
-Currently the "set minInterval secs" does not work since navigator.syncManager.setPolicy is not exposed to the app.
+Currently the "set minInterval secs" does not work since navigator.syncManager.setPolicy is not exposed to the app. Asking about it in [bug 1129184](https://bugzilla.mozilla.org/show_bug.cgi?id=1129184)

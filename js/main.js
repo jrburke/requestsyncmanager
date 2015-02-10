@@ -73,9 +73,7 @@ var actions = {
       return;
     }
 
-    var app = reg.app;
-    manager.setPolicy(reg.task, app.origin, app.manifestURL,
-                      app.isInBrowserElement, reg.state, overridenMinInterval)
+    reg.setPolicy(reg.state, overridenMinInterval)
     .then(function() {
       actions.listSync();
     })

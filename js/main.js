@@ -7,10 +7,17 @@ if (!manager) {
 }
 
 var template = `<div class="regItem">
-<pre>{raw}</pre>
-<form class="intervalForm" data-index="{index}">
-<input name="minInterval" type="number" placeholder="minInterval secs">
-<button type="submit">set</button>
+  <pre>{raw}</pre>
+  <form class="changeMinSync" data-index="{index}">
+    <input name="minInterval" type="number" placeholder="minInterval secs">
+    <button type="submit">set</button>
+  </form>
+  <form class="syncNow" data-index="{index}">
+    <button type="submit">run now</button>
+  </form>
+  <form class="toggleState" data-index="{index}" data-newstate="{newState}">
+    <button type="submit">set {newState}</button>
+  </form>
 </div>`;
 
 var tempNode = document.createElement('div');
@@ -28,9 +35,10 @@ function makeSerializable(target, source, keyObj) {
   });
 }
 
-function makeRegNode(obj, index) {
+function makeRegNode(obj, index, newState) {
   var html = template.replace(/{raw}/g, JSON.stringify(obj, null, '  '))
-                      .replace(/{index}/g, index);
+                      .replace(/{index}/g, index)
+                      .replace(/{newState}/g, newState);
 
   tempNode.innerHTML = html;
   var resultDiv = tempNode.firstChild;
@@ -52,33 +60,51 @@ var actions = {
         var serializable = {};
         makeSerializable(serializable, reg, reg.__proto__);
 
-        regDiv.appendChild(makeRegNode(serializable, i));
+        var newState = serializable.state === 'enabled' ?
+                       'disabled' : 'enabled';
+
+        regDiv.appendChild(makeRegNode(serializable, i, newState));
       });
     }).catch(function(e) {
       console.error('registrations() failed with: ' + e);
     });
   },
 
-  changeMinSync: function(evt) {
+ changeMinSync: function(formNode, reg) {
+    var input = formNode.querySelector('input'),
+        overridenMinInterval = parseInt(input.value, 10);
+
+    return reg.setPolicy(reg.state, overridenMinInterval);
+  },
+
+ syncNow: function(formNode, reg) {
+    return reg.runNow();
+  },
+
+  toggleState: function(formNode, reg) {
+    return reg.setPolicy(formNode.dataset.newstate, reg.overridenMinInterval);
+  },
+
+  onFormSubmit: function(evt) {
     evt.stopPropagation();
     evt.preventDefault();
 
-    var index = parseInt(evt.target.dataset.index, 10),
-        input = evt.target.querySelector('input'),
-        overridenMinInterval = parseInt(input.value, 10),
-        reg = registrations[index];
+    var formNode = evt.target,
+        index = parseInt(formNode.dataset.index, 10),
+        reg = registrations[index],
+        action = formNode.className;
 
     if (!reg) {
       console.error('No registration for index: ' + index);
       return;
     }
 
-    reg.setPolicy(reg.state, overridenMinInterval)
+    actions[action](formNode, reg)
     .then(function() {
       actions.listSync();
     })
     .catch(function(err) {
-      console.error('Change min interval failed: ' + err);
+      console.error(action + ' failed: ' + err);
     });
   }
 };
@@ -91,4 +117,4 @@ Object.keys(actions).forEach(function(key) {
   }
 });
 
-document.body.addEventListener('submit', actions.changeMinSync, false);
+document.body.addEventListener('submit', actions.onFormSubmit, false);

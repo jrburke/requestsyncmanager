@@ -49,6 +49,7 @@ function makeRegNode(obj, index, newState) {
 // Button actions, wired to the buttons with the IDs matching the object keys.
 var actions = {
   listSync: function(evt) {
+    console.log('listSync called');
     var regDiv = document.getElementById('registrations');
     regDiv.innerHTML = '';
 
@@ -65,12 +66,17 @@ var actions = {
 
         regDiv.appendChild(makeRegNode(serializable, i, newState));
       });
+
+      if (!registrations.length) {
+        regDiv.innerHTML = 'No registrations found';
+      }
     }).catch(function(e) {
       console.error('registrations() failed with: ' + e);
     });
   },
 
  changeMinSync: function(formNode, reg) {
+    console.log('listSync called');
     var input = formNode.querySelector('input'),
         overridenMinInterval = parseInt(input.value, 10);
 
@@ -78,14 +84,17 @@ var actions = {
   },
 
  syncNow: function(formNode, reg) {
+    console.log('listSync called');
     return reg.runNow();
   },
 
   toggleState: function(formNode, reg) {
+    console.log('listSync called');
     return reg.setPolicy(formNode.dataset.newstate, reg.overridenMinInterval);
   },
 
   onFormSubmit: function(evt) {
+    console.log('onFormSubmit called');
     evt.stopPropagation();
     evt.preventDefault();
 
@@ -98,6 +107,8 @@ var actions = {
       console.error('No registration for index: ' + index);
       return;
     }
+
+    console.log('onFormSubmit action: ' + action);
 
     actions[action](formNode, reg)
     .then(function() {
